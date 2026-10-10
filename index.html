@@ -164,6 +164,7 @@
         show('form');
       })
       .catch(function () {
+        if ((window.__tries = (window.__tries || 0) + 1) < 3) { setTimeout(loadOptions, 2000); return; }
         setErr('load-err', navigator.onLine ? 'تعذّر تحميل النموذج، حاول مرة أخرى' : 'لا يوجد اتصال بالإنترنت');
         $('btn-retry').hidden = false;
       });
