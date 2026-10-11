@@ -12,7 +12,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="متابعة المعممين">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <style>
   :root{
     --primary:#5D4037; --primary-2:#8D6E63; --accent:#2E7D32;
@@ -20,7 +20,7 @@
     --border:#ddd3ce; --danger:#c62828; --danger-bg:#fdecea; --radius:14px;
   }
   *{box-sizing:border-box}
-  html,body{margin:0;padding:0}
+  html,body{margin:0;padding:0;max-width:100%;overflow-x:hidden}
   body{font-family:'Tajawal',Tahoma,sans-serif;background:var(--bg);color:var(--text);font-size:16px;line-height:1.6}
   [hidden]{display:none !important}
   .topbar{background:linear-gradient(135deg,var(--primary),var(--primary-2));color:#fff;padding:18px 16px 20px;text-align:center}
@@ -58,7 +58,7 @@
   .spinner{width:56px;height:56px;border:6px solid #e8dfdb;border-top-color:var(--primary);border-radius:50%;margin:30px auto 16px;animation:spin 1s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
   .ref{font-size:30px;font-weight:800;color:var(--primary);margin:6px 0 14px}
-  .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+  .hp{position:absolute;top:0;right:0;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;clip-path:inset(50%)}
 </style>
 </head>
 <body>
@@ -151,10 +151,28 @@
 
   function loadOptions() {
     setErr('load-err', ''); $('btn-retry').hidden = true;
+    // فتح فوري: إذا كانت القوائم محفوظة في الهاتف يظهر النموذج مباشرة ثم تُحدَّث القوائم في الخلفية
+    if (!state.ready) {
+      try { var c = JSON.parse(load('adm_opts_cache') || 'null'); if (c && c.provinces) fillForm(c); } catch (x) {}
+    }
     fetch(API + '?action=options&t=' + Date.now())
       .then(function (r) { return r.json(); })
       .then(function (res) {
         if (!res.ok) throw new Error(res.error);
+        store('adm_opts_cache', JSON.stringify(res.options));
+        if (!state.ready) fillForm(res.options);
+      })
+      .catch(function () {
+        if (state.ready) return;
+        if ((window.__tries = (window.__tries || 0) + 1) < 3) { setTimeout(loadOptions, 2000); return; }
+        setErr('load-err', navigator.onLine ? 'تعذّر تحميل النموذج، حاول مرة أخرى' : 'لا يوجد اتصال بالإنترنت');
+        $('btn-retry').hidden = false;
+      });
+  }
+
+  function fillForm(o) {
+    state.ready = true;
+    var res = { options: o };
         var p = $('f-province'); p.innerHTML = '';
         var o0 = document.createElement('option'); o0.value = ''; o0.textContent = '— اختر المحافظة —'; p.appendChild(o0);
         res.options.provinces.forEach(function (v) { var x = document.createElement('option'); x.value = v; x.textContent = v; p.appendChild(x); });
@@ -162,12 +180,6 @@
         if (pr && res.options.provinces.indexOf(pr) >= 0) p.value = pr;
         resetFields();
         show('form');
-      })
-      .catch(function () {
-        if ((window.__tries = (window.__tries || 0) + 1) < 3) { setTimeout(loadOptions, 2000); return; }
-        setErr('load-err', navigator.onLine ? 'تعذّر تحميل النموذج، حاول مرة أخرى' : 'لا يوجد اتصال بالإنترنت');
-        $('btn-retry').hidden = false;
-      });
   }
 
   function resetFields() {
