@@ -247,7 +247,7 @@
         its.forEach(function (x, i) { x.classList.toggle('act', i === combo.act); });
         if (its[combo.act]) its[combo.act].scrollIntoView({ block: 'nearest' });
       } else if (e.key === 'Enter') {
-        e.preventDefault(); if (its[combo.act]) its[combo.act].click(); else if (its.length === 2) its[0].click();
+        e.preventDefault(); if (its[combo.act]) its[combo.act].click(); else if (its.length === 1) its[0].click();
       } else if (e.key === 'Escape') closeList();
     });
     $('name-arrow').addEventListener('click', function () { if (box.hidden) { inp.focus(); openList(true); } else closeList(); });
@@ -267,7 +267,6 @@
       count++;
     });
     if (!count) { var em = document.createElement('div'); em.className = 'empty'; em.textContent = 'لا يوجد اسم مطابق — جرّب كتابة جزء آخر من الاسم'; box.appendChild(em); }
-    var o = item('➕ الاسم غير موجود في القائمة', 'اضغط هنا لكتابة الاسم يدوياً', OTHER); o.classList.add('other'); box.appendChild(o);
     box.hidden = false;
   }
   function item(text, sub, val) {
@@ -300,8 +299,8 @@
     var hit = NAMES.filter(function (r) { return r[0] === v || (r[3] && r[3] === v); })[0];
     if (hit) { pickName(hit[0]); return; }
     combo.picked = ''; $('f-name').value = '';
-    if (v) { pickName(OTHER); $('f-name-other').value = v; $('f-name-other').blur(); }
-    else { combo.other = false; $('other-box').hidden = true; $('name-combo').hidden = false; }
+    // الاختيار من القائمة فقط: الاسم غير الموجود في القائمة لا يُقبل
+    combo.other = false; $('other-box').hidden = true; $('name-combo').hidden = false;
     markPicked();
   }
   // يرجع الاسم المختار، أو '' إذا لم يُختر اسم صحيح
