@@ -1,5 +1,5 @@
 // يحفظ واجهة التطبيق (الصفحة والأيقونات) لتفتح بسرعة
-var CACHE = 'admin-v4';
+var CACHE = 'admin-v5';
 var FILES = ['./', 'index.html', 'manifest.webmanifest', 'admin-192.png', 'admin-512.png', 'apple-touch-icon.png'];
 
 self.addEventListener('install', function (e) {
